@@ -1,8 +1,31 @@
+import http.server
+import socketserver
+import threading
 from dotenv import load_dotenv
 from telethon import TelegramClient, events
 import os
 import asyncio
 
+# Puerta por la que el servidor HTTP escuchará
+PORT = int(os.getenv('PORT', 8000))
+
+# Configurar un simple servidor HTTP para satisfacer los requerimientos de Render
+class SimpleHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"Bot is running!")
+
+def start_http_server():
+    handler = SimpleHTTPRequestHandler
+    with socketserver.TCPServer(("", PORT), handler) as httpd:
+        print(f"serving at port {PORT}")
+        httpd.serve_forever()
+
+# Iniciar el servidor HTTP en un hilo separado
+http_thread = threading.Thread(target=start_http_server)
+http_thread.daemon = True
+http_thread.start()
 # Lista de palabras clave a buscar en los mensajes
 KEYWORDS = ["c4", "doxeo", "dni", "antecedentes", "titular", "arbol", "C4", "C4?", "c4?", "Doxeo?", "doxeo?", "DOXEO", "DNI?", "DNI", "Dni?", "dni?", "arbol?", "Arbol?"]
 
@@ -171,3 +194,4 @@ async def handler(event):
 if __name__ == "__main__":
     # Ejecutar la función logUserBot con la instancia de client
     asyncio.run(logUserBot(client))
+
